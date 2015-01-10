@@ -5,6 +5,7 @@
 #define REDPIN 4
 #define GRNPIN 3
 #define BLUPIN 5
+#define BUTTON_PIN 2
 
 // Parameter 1 = number of pixels in strip
 // Parameter 2 = Arduino pin number (most are valid)
@@ -26,16 +27,16 @@ void setup() {
 }
 
 void loop() {
-  unit8_t red, grn, blu = 0;
-  red = analogRead(REDPIN);
-  grn = analogRead(GRNPIN);
-  blu = analogRead(BLUPIN);
+  uint8_t red, grn, blu, showType = 0;
+  red = analogRead(REDPIN)/4;
+  grn = analogRead(GRNPIN)/4;
+  blu = analogRead(BLUPIN)/4;
   
-  if(red < 5 && blu < 5 && grn < 5){
+  if(red > 5 && blu > 5 && grn > 5){
     // Read and display RGB values 
-    
+    colorSet(strip.Color(grn,red,blu));
   }else{    
-    bool newState = digitalRead(BUTTON_PIN);
+    bool oldState, newState = digitalRead(BUTTON_PIN);
     // Check if state changed from high to low (button press).
     if (newState == LOW && oldState == HIGH) {
       // Short delay to debounce button.
@@ -55,12 +56,13 @@ void loop() {
 
 
 void startShow(int i) {
+  uint32_t color = strip.Color(random(255),random(255),random(255));
   switch(i){
     case 0: nightRide(25, 2);
     break;
-    case 1: ignite(45, strip.Color(random(255),random(255),random(255));
+    case 1: ignite(45, color);
     break;
-    case 2: breathe(5, strip.Color(random(255),random(255),random(255), 3);
+    case 2: breathe(5, color, 3);
     break;
     case 3: rainbow(20);
     break;
@@ -70,7 +72,7 @@ void startShow(int i) {
     break;
     case 6: theaterChase(strip.Color(random(255),random(255),random(255)), 50); 
     break;
-    case 7: colorFadeAndReverse(20, strip.Color(random(255),random(255),random(255));
+    case 7: colorFadeAndReverse(20, color);
     break;
     case 8: rainbowCycle(20);
     break;

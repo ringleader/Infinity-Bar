@@ -1,15 +1,9 @@
 #include <Adafruit_NeoPixel.h>
 #include <math.h>
-
+#ifdef __AVR_ATtiny85__ // Trinket, Gemma, etc.
+#include <avr/power.h>
+#endif
 #define PIN 6
-#define REDPIN 4
-#define GRNPIN 3
-#define BLUPIN 5
-#define BUTTON_PIN 3
-#define PIXEL_COUNT 256
-
-uint8_t red, grn, blu, showType = 0;
-bool oldState = HIGH;
 
 // Parameter 1 = number of pixels in strip
 // Parameter 2 = Arduino pin number (most are valid)
@@ -18,7 +12,7 @@ bool oldState = HIGH;
 //   NEO_KHZ400  400 KHz (classic 'v1' (not v2) FLORA pixels, WS2811 drivers)
 //   NEO_GRB     Pixels are wired for GRB bitstream (most NeoPixel products)
 //   NEO_RGB     Pixels are wired for RGB bitstream (v1 FLORA pixels, not v2)
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXEL_COUNT, PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(256, PIN, NEO_GRB + NEO_KHZ800);
 
 // IMPORTANT: To reduce NeoPixel burnout risk, add 1000 uF capacitor across
 // pixel power leads, add 300 - 500 Ohm resistor on first pixel's data input
@@ -26,63 +20,37 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXEL_COUNT, PIN, NEO_GRB + NEO_KHZ8
 // on a live circuit...if you must, connect GND first.
 
 void setup() {
+  #ifdef __AVR_ATtiny85__ // Trinket, Gemma, etc.
+if(F_CPU == 16000000) clock_prescale_set(clock_div_1);
+#endif
   strip.begin();
   strip.show(); // Initialize all pixels to 'off'
 }
 
 void loop() {
+  // Some example procedures showing how to display to the pixels:
+  uint32_t randomColor = strip.Color(random(255),random(255),random(255));
   
-  red = analogRead(REDPIN)/4;
-  grn = analogRead(GRNPIN)/4;
-  blu = analogRead(BLUPIN)/4;
+  nightRide(25, 2);
   
-  if(analogRead(REDPIN) > 5 || analogRead(BLUPIN) > 5 || analogRead(GRNPIN) > 5){
-    // Read and display RGB values 
-    colorSet(strip.Color(grn, red, blu));
   ///*
-  }else{    
-    /*bool newState = digitalRead(BUTTON_PIN);
-    // Check if state changed from high to low (button press).
-    if (newState == HIGH && oldState == LOW) {
-      // Short delay to debounce button.
-      delay(20);
-      // Check if button is still low after debounce.
-      newState = digitalRead(BUTTON_PIN);
-      if (newState == HIGH) {
-      */  showType++;
-        if (showType > 9)
-          showType=0;
-          startShow(showType);
-        
-    
-  }
+  ignite(45, randomColor);
+  breathe(5, randomColor, 3);
+  rainbow(20);
+  circus(20,5);
+  colorWipe(strip.Color(random(255),random(255),random(255)), 25);
+  
+  // Send a theater pixel chase in...
+  theaterChase(strip.Color(random(255),random(255),random(255)), 50); // White
+  theaterChase(strip.Color(random(255),random(255),random(255)), 50); // Red
+  theaterChase(strip.Color(random(255),random(255),random(255)), 50); // Blue
+
+  
+  //  rainbowCycle(20);
+  theaterChaseRainbow(50);
+  
   //*/
-}
-
-
-void startShow(int i) {
-  switch(i){
-    case 0: nightRide(25, 2);
-    break;
-    case 1: ignite(45, strip.Color(random(255),random(255),random(255)));
-    break;
-    case 2: breathe(1, strip.Color(random(255),random(255),random(255)), 1);
-    break;
-    case 3: rainbow(20);
-    break;
-    case 4: circus(20,1);
-    break;
-    case 5: colorWipe(strip.Color(random(255),random(255),random(255)), 25);
-    break;
-    case 6: theaterChase(strip.Color(random(255),random(255),random(255)), 50); 
-    break;
-    case 7: colorFadeAndReverse(20, strip.Color(random(255),random(255),random(255)));
-    break;
-    case 8: rainbowCycle(20);
-    break;
-    case 9: theaterChaseRainbow(50);
-    break;
-  }
+  
 }
 
 void nightRide(uint8_t wait, uint8_t cycles) {
@@ -237,13 +205,6 @@ void colorWipe(uint32_t c, uint8_t wait) {
       strip.show();
       delay(wait);
   }
-}
-
-void colorSet(uint32_t c) {
-  for(uint16_t i=0; i<strip.numPixels(); i++) {
-      strip.setPixelColor(i, c);
-  }
-  strip.show();
 }
 
 void rainbow(uint8_t wait) {
